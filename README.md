@@ -1,4 +1,4 @@
-# Variance-based Feature Importance in NeuralNetworks
+# Variance-based Feature Importance in Neural Networks / Deep Learning
 
 This file provides a working example of how to measure the importance of features (inputs) in neural networks. 
 
