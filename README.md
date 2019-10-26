@@ -9,7 +9,7 @@ When the training is finished, for each input, the variances of the weights are 
 The file **variance-based feature importance in artificial neural networks.ipynb** includes the code to fully replicate the results obtained in the paper:
 
 CR de Sá [**Variance-based Feature Importance in Neural Networks**](https://doi.org/10.1007/978-3-030-33778-0_24)  
-22st International Conference on Discovery Science (DS 2019) Split, Croacia, October 28-30, 2019
+22st International Conference on Discovery Science (DS 2019) Split, Croatia, October 28-30, 2019
 
 
 ## VIANN
