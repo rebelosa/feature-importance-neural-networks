@@ -24,7 +24,7 @@ import logging
 
 logging.basicConfig(level=logging.INFO)
 
-VIANN = VarianceImportanceCallback(verbose=1)
+VIANN = VarianceImportanceCallback()
 ```
 
 Use this callback during model training:

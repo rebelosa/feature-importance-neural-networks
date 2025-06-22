@@ -22,13 +22,11 @@ class VarianceImportanceCallback(Callback):
 
     Parameters
     ----------
-    verbose : int, default=0
-        When ``>0`` the callback reports basic information during training.
+    None currently.
     """
 
-    def __init__(self, verbose: int = 0) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        self.verbose = int(verbose)
 
         self._n: int = 0
         self._mean: np.ndarray | None = None
@@ -45,12 +43,11 @@ class VarianceImportanceCallback(Callback):
         if not weights:
             raise ValueError("First layer does not contain weights.")
 
-        if self.verbose:
-            logger.info(
-                "Tracking variance for layer '%s' with %d features",
-                self._layer.name,
-                weights[0].shape[0],
-            )
+        logger.info(
+            "Tracking variance for layer '%s' with %d features",
+            self._layer.name,
+            weights[0].shape[0],
+        )
 
         self._mean = weights[0].astype(np.float64)
         self._m2 = np.zeros_like(self._mean)
@@ -90,9 +87,8 @@ class VarianceImportanceCallback(Callback):
         denom = max_val - min_val if max_val != min_val else 1.0
         self.var_scores = (scores - min_val) / denom
 
-        if self.verbose:
-            top = np.argsort(self.var_scores)[-10:][::-1]
-            logger.info("Most important variables: %s", top)
+        top = np.argsort(self.var_scores)[-10:][::-1]
+        logger.info("Most important variables: %s", top)
 
     @property
     def feature_importances_(self) -> np.ndarray | None:
@@ -101,4 +97,4 @@ class VarianceImportanceCallback(Callback):
 
     def get_config(self) -> dict[str, int]:
         """Return configuration for serialization."""
-        return {"verbose": self.verbose}
+        return {}
