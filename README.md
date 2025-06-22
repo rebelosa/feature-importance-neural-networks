@@ -20,13 +20,14 @@ It will automatically track the first layer that contains trainable weights so y
 There is also a helper for PyTorch models that follows the same API.
 
 ```python
-from variance_importance import VarianceImportanceCallback
+from variance_importance import VarianceImportanceCallback, AccuracyMonitor
 
 import logging
 
 logging.basicConfig(level=logging.INFO)
 
 VIANN = VarianceImportanceCallback()
+monitor = AccuracyMonitor(baseline=0.95)
 ```
 
 For a PyTorch model, use ``VarianceImportanceTorch`` and call its
@@ -56,7 +57,7 @@ model.add(Dense(5, activation='softmax', kernel_initializer='normal'))
 
 model.compile(loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
 model.fit(X, Y, validation_split=0.05, epochs=30, batch_size=64, shuffle=True,
-          verbose=1, callbacks=[VIANN])
+          verbose=1, callbacks=[VIANN, monitor])
 
 print(VIANN.var_scores)
 ```
@@ -69,4 +70,10 @@ with those from a `RandomForestClassifier`.
 
 ```bash
 python compare_feature_importance.py
+```
+
+For a larger experiment across several datasets, run `full_experiment.py`. The script builds a simple network for each dataset, applies the `AccuracyMonitor` for early stopping, and prints the correlation between neural network importances and a random forest baseline.
+
+```bash
+python full_experiment.py
 ```

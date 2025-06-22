@@ -1,6 +1,6 @@
 # Repository Guidelines
 
-This repository contains a minimal Python package named `variance_importance` which provides utilities to compute variance-based feature importances. The main class is `VarianceImportanceCallback` for `tf.keras` models and there is an equivalent `VarianceImportanceTorch` helper for PyTorch networks. The method is described in the article [CR de Sá, *Variance-based Feature Importance in Neural Networks*](https://doi.org/10.1007/978-3-030-33778-0_24).
+This repository contains a minimal Python package named `variance_importance` which provides utilities to compute variance-based feature importances. It exposes `VarianceImportanceCallback` for `tf.keras` models, `VarianceImportanceTorch` for PyTorch, and an `AccuracyMonitor` helper. The method is described in the article [CR de Sá, *Variance-based Feature Importance in Neural Networks*](https://doi.org/10.1007/978-3-030-33778-0_24).
 
 ## Style
 - Follow PEP8 and PEP257 standards.
@@ -10,7 +10,7 @@ This repository contains a minimal Python package named `variance_importance` wh
 
 ## Package layout
 - The public API lives in `variance_importance/callbacks.py` and is re-exported from `variance_importance/__init__.py`.
-- The callback class is `VarianceImportanceCallback` and exposes the attribute `var_scores` along with the property `feature_importances_`.
+- `VarianceImportanceCallback` exposes the attribute `var_scores` and property `feature_importances_`. The module also provides `AccuracyMonitor` and `VarianceImportanceTorch`.
 
 ## Testing
 Run these commands after making changes:

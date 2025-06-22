@@ -15,7 +15,7 @@ from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
 from variance_importance import (
-    VarianceImportanceCallback,
+    VarianceImportanceKeras,
     VarianceImportanceTorch,
 )
 
@@ -57,7 +57,7 @@ def main() -> None:
     y_train_cat = to_categorical(y_train, num_classes)
 
     model = build_model(data.data.shape[1], num_classes)
-    callback = VarianceImportanceCallback()
+    callback = VarianceImportanceKeras()
     model.fit(
         X_train,
         y_train_cat,
@@ -106,6 +106,7 @@ def main() -> None:
     if torch_scores is not None:
         corr_torch = np.corrcoef(torch_scores, rf_scores)[0, 1]
         logger.info("Correlation between PyTorch and RF: %.3f", corr_torch)
+
 
 if __name__ == "__main__":
     main()
