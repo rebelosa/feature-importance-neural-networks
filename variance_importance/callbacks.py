@@ -1,10 +1,9 @@
-"""Callback for computing variance-based feature importance.
+"""Variance-based feature importance callback.
 
-This module provides :class:`VarianceImportanceCallback`, a Keras callback that
-tracks the evolution of the first layer's weights during training. By measuring
-the running variance of each weight and combining it with the final magnitude of
-the weights, the callback derives a relative importance score for each input
-feature.
+This module implements :class:`VarianceImportanceCallback`, a small utility
+that can be plugged into a ``tf.keras`` training loop.  The callback tracks the
+evolution of the first layer's weights using Welford's online algorithm and,
+after training, derives a normalized importance score for each input feature.
 """
 
 from __future__ import annotations
@@ -14,6 +13,7 @@ from typing import Optional
 
 import numpy as np
 from tensorflow.keras.callbacks import Callback
+from tensorflow.keras.layers import Layer
 
 logger = logging.getLogger(__name__)
 
@@ -22,56 +22,83 @@ class VarianceImportanceCallback(Callback):
 
     Parameters
     ----------
-    verbose : int, optional
-        Verbosity mode. When ``> 0`` the callback reports basic information
-        during training.
+    verbose : int, default=0
+        When ``>0`` the callback reports basic information during training.
     """
 
     def __init__(self, verbose: int = 0) -> None:
         super().__init__()
-        self.verbose = verbose
-        self.n: int = 0
-        self.M2: np.ndarray | float = 0.0
-        self.diff: np.ndarray | None = None
-        self.last_weights: np.ndarray | None = None
+        self.verbose = int(verbose)
+
+        self._n: int = 0
+        self._mean: np.ndarray | None = None
+        self._m2: np.ndarray | None = None
+        self._layer: Optional[Layer] = None
+        self._last_weights: np.ndarray | None = None
+
         self.var_scores: np.ndarray | None = None
-        self._layer = None
 
     def on_train_begin(self, logs: Optional[dict] = None) -> None:
         """Initialize running statistics at the start of training."""
-        if self.verbose:
-            logger.info("VIANN version 1.0 (Welford + Mean) update per epoch")
-
         self._layer = self.model.layers[0]
-        self.diff = self._layer.get_weights()[0].astype(np.float64)
-        self.M2 = np.zeros_like(self.diff, dtype=np.float64)
-        self.n = 0
+        weights = self._layer.get_weights()
+        if not weights:
+            raise ValueError("First layer does not contain weights.")
+
+        if self.verbose:
+            logger.info(
+                "Tracking variance for layer '%s' with %d features",
+                self._layer.name,
+                weights[0].shape[0],
+            )
+
+        self._mean = weights[0].astype(np.float64)
+        self._m2 = np.zeros_like(self._mean)
+        self._n = 0
 
     def on_epoch_end(self, epoch: int, logs: Optional[dict] = None) -> None:
         """Update running variance after each epoch."""
+        if self._layer is None or self._mean is None or self._m2 is None:
+            return
+
         current_weights = self._layer.get_weights()[0]
 
-        self.n += 1
-        delta = current_weights - self.diff
-        self.diff += delta / self.n
-        delta2 = current_weights - self.diff
-        self.M2 += delta * delta2
+        self._n += 1
+        delta = current_weights - self._mean
+        self._mean += delta / self._n
+        delta2 = current_weights - self._mean
+        self._m2 += delta * delta2
 
-        self.last_weights = current_weights
+        self._last_weights = current_weights
 
     def on_train_end(self, logs: Optional[dict] = None) -> None:
         """Finalize variance statistics and compute importance scores."""
-        if self.n < 2:
-            s2 = np.full_like(self.M2, np.nan)
-        else:
-            s2 = self.M2 / (self.n - 1)
+        if self._last_weights is None or self._m2 is None:
+            logger.warning(
+                "VarianceImportanceCallback was not fully initialized; no scores computed"
+            )
+            return
 
-        scores = np.sum(s2 * np.abs(self.last_weights), axis=1)
-        max_val = float(np.max(scores))
+        if self._n < 2:
+            variance = np.full_like(self._m2, np.nan)
+        else:
+            variance = self._m2 / (self._n - 1)
+
+        scores = np.sum(variance * np.abs(self._last_weights), axis=1)
         min_val = float(np.min(scores))
+        max_val = float(np.max(scores))
         denom = max_val - min_val if max_val != min_val else 1.0
         self.var_scores = (scores - min_val) / denom
 
         if self.verbose:
             top = np.argsort(self.var_scores)[-10:][::-1]
             logger.info("Most important variables: %s", top)
+
+    @property
+    def feature_importances_(self) -> np.ndarray | None:
+        """Normalized importance scores for each input feature."""
+        return self.var_scores
+
+    def get_config(self) -> dict[str, int]:
+        """Return configuration for serialization."""
+        return {"verbose": self.verbose}
