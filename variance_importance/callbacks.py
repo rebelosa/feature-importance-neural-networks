@@ -37,11 +37,20 @@ class VarianceImportanceCallback(Callback):
         self.var_scores: np.ndarray | None = None
 
     def on_train_begin(self, logs: Optional[dict] = None) -> None:
-        """Initialize running statistics at the start of training."""
-        self._layer = self.model.layers[0]
+        """Initialize running statistics at the start of training.
+
+        The callback automatically searches for the first layer with trainable
+        weights so it works with models that include an ``InputLayer`` or other
+        preprocessing layers before the first dense layer.
+        """
+        self._layer = None
+        for layer in self.model.layers:
+            if layer.get_weights():
+                self._layer = layer
+                break
+        if self._layer is None:
+            raise ValueError("Model does not contain trainable weights.")
         weights = self._layer.get_weights()
-        if not weights:
-            raise ValueError("First layer does not contain weights.")
 
         logger.info(
             "Tracking variance for layer '%s' with %d features",

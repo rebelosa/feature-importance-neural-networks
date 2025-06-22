@@ -16,6 +16,7 @@ CR de Sá [**Variance-based Feature Importance in Neural Networks**](https://doi
 #### Variance-based Feature Importance of Artificial Neural Networks
 
 This repository exposes the feature importance callback as a small Python package named `variance_importance`.
+It will automatically track the first layer that contains trainable weights so you can use it with models that start with an `InputLayer` or other preprocessing layers.
 
 ```python
 from variance_importance import VarianceImportanceCallback
