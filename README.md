@@ -17,6 +17,7 @@ CR de Sá [**Variance-based Feature Importance in Neural Networks**](https://doi
 
 This repository exposes the feature importance callback as a small Python package named `variance_importance`.
 It will automatically track the first layer that contains trainable weights so you can use it with models that start with an `InputLayer` or other preprocessing layers.
+There is also a helper for PyTorch models that follows the same API.
 
 ```python
 from variance_importance import VarianceImportanceCallback
@@ -26,6 +27,22 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 VIANN = VarianceImportanceCallback()
+```
+
+For a PyTorch model, use ``VarianceImportanceTorch`` and call its
+``on_train_begin``, ``on_epoch_end`` and ``on_train_end`` methods inside your
+training loop:
+
+```python
+from variance_importance import VarianceImportanceTorch
+
+tracker = VarianceImportanceTorch(model)
+tracker.on_train_begin()
+for epoch in range(num_epochs):
+    train_one_epoch(model, optimizer, data_loader)
+    tracker.on_epoch_end()
+tracker.on_train_end()
+print(tracker.var_scores)
 ```
 
 Use this callback during model training:

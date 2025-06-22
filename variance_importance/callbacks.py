@@ -107,3 +107,78 @@ class VarianceImportanceCallback(Callback):
     def get_config(self) -> dict[str, int]:
         """Return configuration for serialization."""
         return {}
+
+
+class VarianceImportanceTorch:
+    """Track variance-based feature importance for PyTorch models."""
+
+    def __init__(self, model: "nn.Module") -> None:
+        from torch import nn  # Local import to avoid hard dependency
+
+        self.model = model
+        self._param: nn.Parameter | None = None
+        self._n = 0
+        self._mean: np.ndarray | None = None
+        self._m2: np.ndarray | None = None
+        self._last_weights: np.ndarray | None = None
+        self.var_scores: np.ndarray | None = None
+
+    def on_train_begin(self) -> None:
+        """Locate the first trainable parameter and initialize stats."""
+        from torch import nn
+
+        for name, param in self.model.named_parameters():
+            if param.requires_grad and param.dim() >= 2:
+                self._param = param
+                weights = param.detach().cpu().numpy()
+                logger.info(
+                    "Tracking variance for parameter '%s' with %d features",
+                    name,
+                    weights.shape[1],
+                )
+                self._mean = weights.astype(np.float64)
+                self._m2 = np.zeros_like(self._mean)
+                break
+
+        if self._param is None:
+            raise ValueError("Model does not contain trainable parameters")
+
+    def on_epoch_end(self) -> None:
+        """Update running variance after each epoch."""
+        if self._param is None or self._mean is None or self._m2 is None:
+            return
+
+        current_weights = self._param.detach().cpu().numpy()
+        self._n += 1
+        delta = current_weights - self._mean
+        self._mean += delta / self._n
+        delta2 = current_weights - self._mean
+        self._m2 += delta * delta2
+        self._last_weights = current_weights
+
+    def on_train_end(self) -> None:
+        """Compute final importance scores."""
+        if self._last_weights is None or self._m2 is None:
+            logger.warning(
+                "VarianceImportanceTorch was not fully initialized; no scores computed"
+            )
+            return
+
+        if self._n < 2:
+            variance = np.full_like(self._m2, np.nan)
+        else:
+            variance = self._m2 / (self._n - 1)
+
+        scores = np.sum(variance * np.abs(self._last_weights), axis=1)
+        min_val = float(np.min(scores))
+        max_val = float(np.max(scores))
+        denom = max_val - min_val if max_val != min_val else 1.0
+        self.var_scores = (scores - min_val) / denom
+
+        top = np.argsort(self.var_scores)[-10:][::-1]
+        logger.info("Most important variables: %s", top)
+
+    @property
+    def feature_importances_(self) -> np.ndarray | None:
+        """Normalized importance scores for each input feature."""
+        return self.var_scores
