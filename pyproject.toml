@@ -7,3 +7,8 @@ name = "variance_importance"
 version = "0.1.0"
 description = "Variance-based feature importance callbacks for Keras and PyTorch"
 authors = [{name = "CR de Sá"}]
+dependencies = ["numpy"]
+
+[project.optional-dependencies]
+tensorflow = ["tensorflow"]
+torch = ["torch"]

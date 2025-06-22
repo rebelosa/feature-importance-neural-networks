@@ -19,6 +19,13 @@ This repository exposes the feature importance callback as a small Python packag
 It will automatically track the first layer that contains trainable weights so you can use it with models that start with an `InputLayer` or other preprocessing layers.
 There is also a helper for PyTorch models that follows the same API.
 
+Install with pip and select the extras that match your framework:
+
+```bash
+pip install "variance_importance[tensorflow]"  # for Keras
+pip install "variance_importance[torch]"       # for PyTorch
+```
+
 ```python
 from variance_importance import VarianceImportanceCallback, AccuracyMonitor
 
