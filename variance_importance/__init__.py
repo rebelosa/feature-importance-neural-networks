@@ -1,13 +1,15 @@
 """Utilities for variance-based feature importance in neural networks."""
 
 from .callbacks import (
-    VarianceImportanceCallback,
+    VarianceImportanceBase,
+    VarianceImportanceKeras,
     VarianceImportanceTorch,
-    AccuracyMonitor,
 )
+from .utils import MetricThreshold
 
 __all__ = [
-    "VarianceImportanceCallback",
+    "VarianceImportanceBase",
+    "VarianceImportanceKeras",
     "VarianceImportanceTorch",
-    "AccuracyMonitor",
+    "MetricThreshold",
 ]

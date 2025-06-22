@@ -13,7 +13,8 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.regularizers import l2
 
-from variance_importance import VarianceImportanceCallback, AccuracyMonitor
+from variance_importance import VarianceImportanceKeras
+from variance_importance.utils import MetricThreshold
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -58,7 +59,7 @@ def run_experiment() -> None:
             output_size = Y.shape[1]
             rf = RandomForestClassifier(n_estimators=100)
             rf.fit(X, ds.target)
-            monitor = AccuracyMonitor(baseline=0.95)
+            monitor = MetricThreshold(monitor="val_accuracy", threshold=0.95)
         else:
             Y = scale(ds.target)
             output_size = 1
@@ -67,7 +68,7 @@ def run_experiment() -> None:
             monitor = None
 
         model = nn2(X.shape[1], output_size, cfg["classification"])
-        viann = VarianceImportanceCallback()
+        viann = VarianceImportanceKeras()
         callbacks = [viann]
         if monitor:
             callbacks.append(monitor)
