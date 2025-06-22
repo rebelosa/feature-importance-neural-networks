@@ -107,6 +107,5 @@ def main() -> None:
         corr_torch = np.corrcoef(torch_scores, rf_scores)[0, 1]
         logger.info("Correlation between PyTorch and RF: %.3f", corr_torch)
 
-
 if __name__ == "__main__":
     main()
