@@ -42,3 +42,13 @@ model.fit(X, Y, validation_split=0.05, epochs=30, batch_size=64, shuffle=True,
 
 print(VIANN.var_scores)
 ```
+
+## Comparing with Random Forest
+
+To verify the variance-based scores, run `compare_feature_importance.py`. The
+script trains a small neural network on the Iris dataset and compares the scores
+with those from a `RandomForestClassifier`.
+
+```bash
+python compare_feature_importance.py
+```
