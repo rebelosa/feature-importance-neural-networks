@@ -14,46 +14,41 @@ CR de Sá [**Variance-based Feature Importance in Neural Networks**](https://doi
 
 ## VIANN
 #### Variance-based Feature Importance of Artificial Neural Networks
+
+This repository exposes the feature importance callback as a small Python package named `variance_importance`.
+It will automatically track the first layer that contains trainable weights so you can use it with models that start with an `InputLayer` or other preprocessing layers.
+There is also a helper for PyTorch models that follows the same API.
+
 ```python
-class VarImpVIANN(keras.callbacks.Callback):
-    def __init__(self, verbose=0):
-        self.verbose = verbose
-        self.n = 0
-        self.M2 = 0.0
+from variance_importance import VarianceImportanceCallback, AccuracyMonitor
 
-    def on_train_begin(self, logs={}, verbose = 1):
-        if self.verbose:
-            print("VIANN version 1.0 (Wellford + Mean) update per epoch")
-        self.diff = self.model.layers[0].get_weights()[0]
-        
-    def on_epoch_end(self, batch, logs={}):
-        currentWeights = self.model.layers[0].get_weights()[0]
-        
-        self.n += 1
-        delta = np.subtract(currentWeights, self.diff)
-        self.diff += delta/self.n
-        delta2 = np.subtract(currentWeights, self.diff)
-        self.M2 += delta*delta2
-            
-        self.lastweights = self.model.layers[0].get_weights()[0]
+import logging
 
-    def on_train_end(self, batch, logs={}):
-        if self.n < 2:
-            self.s2 = float('nan')
-        else:
-            self.s2 = self.M2 / (self.n - 1)
-        
-        scores = np.sum(np.multiply(self.s2, np.abs(self.lastweights)), axis = 1)
-        
-        self.varScores = (scores - min(scores)) / (max(scores) - min(scores))
-        if self.verbose:
-            print("Most important variables: ",
-                  np.array(self.varScores).argsort()[-10:][::-1])
+logging.basicConfig(level=logging.INFO)
+
+VIANN = VarianceImportanceCallback()
+monitor = AccuracyMonitor(baseline=0.95)
 ```
-## Example of usage
-```python
-VIANN = VarImpVIANN(verbose=1)
 
+For a PyTorch model, use ``VarianceImportanceTorch`` and call its
+``on_train_begin``, ``on_epoch_end`` and ``on_train_end`` methods inside your
+training loop:
+
+```python
+from variance_importance import VarianceImportanceTorch
+
+tracker = VarianceImportanceTorch(model)
+tracker.on_train_begin()
+for epoch in range(num_epochs):
+    train_one_epoch(model, optimizer, data_loader)
+    tracker.on_epoch_end()
+tracker.on_train_end()
+print(tracker.var_scores)
+```
+
+Use this callback during model training:
+
+```python
 model = Sequential()
 model.add(Dense(50, input_dim=input_dim, activation='relu', kernel_initializer='normal', kernel_regularizer=l2(0.01)))
 model.add(Dense(100, activation='relu', kernel_initializer='normal', kernel_regularizer=l2(0.01)))
@@ -61,15 +56,24 @@ model.add(Dense(50, activation='relu', kernel_initializer='normal', kernel_regul
 model.add(Dense(5, activation='softmax', kernel_initializer='normal'))
 
 model.compile(loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
+model.fit(X, Y, validation_split=0.05, epochs=30, batch_size=64, shuffle=True,
+          verbose=1, callbacks=[VIANN, monitor])
 
-model.fit(X, Y, validation_split=0.05, epochs=30, batch_size=64, shuffle=True, 
-      verbose=1, callbacks = [VIANN])
-      
-print(VIANN.varScores)
-[0.75878453 0.2828902  0.85303473 0.6568499  0.07119488 0.20491114
- 0.3517472  0.844915   0.03618119 0.03033427 0.4099664  0.
- 0.3236221  0.21142973 0.00467986 0.02231793 0.0134031  0.03483544
- 0.02274348 0.02686052 1.         0.6406668  0.80592436 0.6484351
- 0.3022079  0.35150513 0.54522735 0.8139651  0.24560207 0.04865947]
+print(VIANN.var_scores)
 ```
 
+## Comparing with Random Forest
+
+To verify the variance-based scores, run `compare_feature_importance.py`. The
+script trains a small neural network on the Iris dataset and compares the scores
+with those from a `RandomForestClassifier`.
+
+```bash
+python compare_feature_importance.py
+```
+
+For a larger experiment across several datasets, run `full_experiment.py`. The script builds a simple network for each dataset, applies the `AccuracyMonitor` for early stopping, and prints the correlation between neural network importances and a random forest baseline.
+
+```bash
+python full_experiment.py
+```
