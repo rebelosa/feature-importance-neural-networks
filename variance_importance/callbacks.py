@@ -46,15 +46,18 @@ class VarianceImportanceBase:
                 "%s was not fully initialized; no scores computed", self.__class__.__name__
             )
             return
+          
         if self._n < 2:
             variance = np.full_like(self._m2, np.nan)
         else:
             variance = self._m2 / (self._n - 1)
+
         scores = np.sum(variance * np.abs(self._last_weights), axis=1)
         min_val = float(np.min(scores))
         max_val = float(np.max(scores))
         denom = max_val - min_val if max_val != min_val else 1.0
         self.var_scores = (scores - min_val) / denom
+
         top = np.argsort(self.var_scores)[-10:][::-1]
         logger.info("Most important variables: %s", top)
 
