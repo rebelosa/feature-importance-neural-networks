@@ -36,14 +36,15 @@ print(__version__)
 ```
 
 ```python
-from neural_feature_importance import VarianceImportanceCallback, AccuracyMonitor
+from neural_feature_importance import VarianceImportanceKeras
+from neural_feature_importance.utils import MetricThreshold
 
 import logging
 
 logging.basicConfig(level=logging.INFO)
 
-VIANN = VarianceImportanceCallback()
-monitor = AccuracyMonitor(baseline=0.95)
+VIANN = VarianceImportanceKeras()
+monitor = MetricThreshold(monitor="val_accuracy", threshold=0.95)
 ```
 
 For a PyTorch model, use ``VarianceImportanceTorch`` and call its
@@ -88,7 +89,7 @@ with those from a `RandomForestClassifier`.
 python compare_feature_importance.py
 ```
 
-For a larger experiment across several datasets, run `full_experiment.py`. The script builds a simple network for each dataset, applies the `AccuracyMonitor` for early stopping, and prints the correlation between neural network importances and a random forest baseline.
+For a larger experiment across several datasets, run `full_experiment.py`. The script builds a simple network for each dataset, applies the `MetricThreshold` callback for early stopping, and prints the correlation between neural network importances and a random forest baseline.
 
 ```bash
 python full_experiment.py
