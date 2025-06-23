@@ -9,6 +9,7 @@ authors = [{name = "CR de Sá"}]
 readme = "README.md"
 dependencies = ["numpy"]
 dynamic = ["version"]
+requires-python = ">=3.10"
 
 [project.optional-dependencies]
 tensorflow = ["tensorflow"]
