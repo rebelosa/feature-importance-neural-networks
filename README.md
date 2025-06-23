@@ -26,6 +26,14 @@ pip install "neural_importance[tensorflow]"  # for Keras
 pip install "neural_importance[torch]"       # for PyTorch
 ```
 
+The package uses `setuptools_scm` to derive its version from Git tags. Access it
+via:
+
+```python
+from neural_importance import __version__
+print(__version__)
+```
+
 ```python
 from neural_importance import VarianceImportanceCallback, AccuracyMonitor
 
