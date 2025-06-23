@@ -2,29 +2,33 @@
 
 Variance-based feature importance for deep learning models.
 
-`neural-feature-importance` implements the method described in [CR de Sá, *Variance-based Feature Importance in Neural Networks*](https://doi.org/10.1007/978-3-030-33778-0_24). The library tracks the variance of input weights during training using Welford's algorithm and computes normalized importance scores.
+`neural-feature-importance` implements the method described in
+[CR de Sá, *Variance-based Feature Importance in Neural Networks*](https://doi.org/10.1007/978-3-030-33778-0_24).
+It tracks the variance of the first trainable layer using Welford's algorithm
+and produces normalized importance scores for each feature.
 
 ## Features
-- `VarianceImportanceKeras` callback for TensorFlow/Keras
-- `VarianceImportanceTorch` helper for PyTorch
-- Early-stopping `MetricThreshold` callback
-- Utility scripts to reproduce the experiments from the paper
+
+- `VarianceImportanceKeras` — drop-in callback for TensorFlow/Keras models
+- `VarianceImportanceTorch` — helper class for PyTorch training loops
+- `MetricThreshold` — early-stopping callback based on a monitored metric
+- Example scripts to reproduce the experiments from the paper
 
 ## Installation
 
 ```bash
-pip install "neural-feature-importance[tensorflow]"  # Keras support
-pip install "neural-feature-importance[torch]"       # PyTorch support
+pip install "neural-feature-importance[tensorflow]"  # for Keras
+pip install "neural-feature-importance[torch]"       # for PyTorch
 ```
 
-## Getting the version
+Retrieve the package version via:
 
 ```python
 from neural_feature_importance import __version__
 print(__version__)
 ```
 
-## Usage
+## Quick start
 
 ### Keras
 
@@ -34,8 +38,8 @@ from neural_feature_importance.utils import MetricThreshold
 
 viann = VarianceImportanceKeras()
 monitor = MetricThreshold(monitor="val_accuracy", threshold=0.95)
-model.fit(X, Y, validation_split=0.05, epochs=30, callbacks=[viann, monitor])
-print(viann.var_scores)
+model.fit(X, y, validation_split=0.05, epochs=30, callbacks=[viann, monitor])
+print(viann.feature_importances_)
 ```
 
 ### PyTorch
@@ -46,21 +50,22 @@ from neural_feature_importance import VarianceImportanceTorch
 tracker = VarianceImportanceTorch(model)
 tracker.on_train_begin()
 for epoch in range(num_epochs):
-    train_one_epoch(model, optimizer, data_loader)
+    train_one_epoch(model, optimizer, dataloader)
     tracker.on_epoch_end()
 tracker.on_train_end()
-print(tracker.var_scores)
+print(tracker.feature_importances_)
 ```
 
 ## Example scripts
 
-Run `compare_feature_importance.py` to train a small network on the Iris dataset and compare the scores with a random forest baseline:
+Run `compare_feature_importance.py` to train a small network on the Iris dataset
+and compare the scores with a random forest baseline:
 
 ```bash
 python compare_feature_importance.py
 ```
 
-Run `full_experiment.py` to reproduce the paper's experiment across several datasets:
+Run `full_experiment.py` to reproduce the experiments from the paper:
 
 ```bash
 python full_experiment.py
@@ -68,7 +73,7 @@ python full_experiment.py
 
 ## Development
 
-After making changes, run:
+After making changes, run the following checks:
 
 ```bash
 python -m py_compile neural_feature_importance/callbacks.py
