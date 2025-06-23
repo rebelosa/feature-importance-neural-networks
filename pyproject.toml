@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "neural-feature-importance"
 description = "Variance-based feature importance for Neural Networks using callbacks for Keras and PyTorch"
 authors = [{name = "CR de Sá"}]
+readme = "README.md"
 dependencies = ["numpy"]
 dynamic = ["version"]
 
