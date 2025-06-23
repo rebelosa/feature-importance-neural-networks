@@ -15,19 +15,19 @@ CR de Sá [**Variance-based Feature Importance in Neural Networks**](https://doi
 ## VIANN
 #### Variance-based Feature Importance of Artificial Neural Networks
 
-This repository exposes the feature importance callback as a small Python package named `variance_importance`.
+This repository exposes the feature importance callback as a small Python package named `neural_importance`.
 It will automatically track the first layer that contains trainable weights so you can use it with models that start with an `InputLayer` or other preprocessing layers.
 There is also a helper for PyTorch models that follows the same API.
 
 Install with pip and select the extras that match your framework:
 
 ```bash
-pip install "variance_importance[tensorflow]"  # for Keras
-pip install "variance_importance[torch]"       # for PyTorch
+pip install "neural_importance[tensorflow]"  # for Keras
+pip install "neural_importance[torch]"       # for PyTorch
 ```
 
 ```python
-from variance_importance import VarianceImportanceCallback, AccuracyMonitor
+from neural_importance import VarianceImportanceCallback, AccuracyMonitor
 
 import logging
 
@@ -42,7 +42,7 @@ For a PyTorch model, use ``VarianceImportanceTorch`` and call its
 training loop:
 
 ```python
-from variance_importance import VarianceImportanceTorch
+from neural_importance import VarianceImportanceTorch
 
 tracker = VarianceImportanceTorch(model)
 tracker.on_train_begin()
