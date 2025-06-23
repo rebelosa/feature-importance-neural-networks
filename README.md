@@ -2,6 +2,8 @@
 
 [![PyPI version](https://img.shields.io/pypi/v/neural-feature-importance.svg)](https://pypi.org/project/neural-feature-importance/)
 [![Python versions](https://img.shields.io/pypi/pyversions/neural-feature-importance.svg)](https://pypi.org/project/neural-feature-importance/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 Variance-based feature importance for deep learning models.
 
@@ -111,3 +113,7 @@ If you use this package in your research, please cite:
 ```
 
 We appreciate citations as they help the community discover this work.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
