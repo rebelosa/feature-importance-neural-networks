@@ -1,14 +1,15 @@
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools", "wheel", "setuptools_scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "neural-feature-importance"
-version = "0.1.0"
 description = "Variance-based feature importance for Neural Networks using callbacks for Keras and PyTorch"
 authors = [{name = "CR de Sá"}]
 dependencies = ["numpy"]
+dynamic = ["version"]
 
 [project.optional-dependencies]
 tensorflow = ["tensorflow"]
 torch = ["torch"]
+[tool.setuptools_scm]
