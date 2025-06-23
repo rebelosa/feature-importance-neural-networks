@@ -1,5 +1,8 @@
 # neural-feature-importance
 
+[![PyPI version](https://img.shields.io/pypi/v/neural-feature-importance.svg)](https://pypi.org/project/neural-feature-importance/)
+[![Python versions](https://img.shields.io/pypi/pyversions/neural-feature-importance.svg)](https://pypi.org/project/neural-feature-importance/)
+
 Variance-based feature importance for deep learning models.
 
 `neural-feature-importance` implements the method described in
