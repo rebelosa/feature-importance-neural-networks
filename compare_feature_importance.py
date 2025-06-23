@@ -14,7 +14,7 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
-from neural_importance import (
+from neural_feature_importance import (
     VarianceImportanceKeras,
     VarianceImportanceTorch,
 )

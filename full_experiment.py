@@ -13,8 +13,8 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.regularizers import l2
 
-from neural_importance import VarianceImportanceKeras
-from neural_importance.utils import MetricThreshold
+from neural_feature_importance import VarianceImportanceKeras
+from neural_feature_importance.utils import MetricThreshold
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
