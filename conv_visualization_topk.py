@@ -71,22 +71,25 @@ def main() -> None:
     model.fit(x_train, y_train, epochs=5, batch_size=32, callbacks=[callback], verbose=1)
 
     scores = callback.feature_importances_
-    if scores is None:
+    max_var = callback.max_variance_
+    if scores is None or max_var is None:
         logger.warning("No importance scores computed.")
         return
 
     weights = model.layers[0].get_weights()[0]
     n_filters = weights.shape[-1]
     heatmap = scores.reshape(weights.shape[:3])
-    threshold = 0.5
+    max_map = max_var.reshape(weights.shape[:3])
+    threshold = 0.0
     filter_scores, thr_weights = compute_filter_scores(weights, heatmap, threshold)
     order = np.argsort(filter_scores)[::-1]
 
-    fig, axes = plt.subplots(n_filters, 3, figsize=(9, 3 * n_filters))
+    fig, axes = plt.subplots(n_filters, 4, figsize=(12, 3 * n_filters))
     for row, idx in enumerate(order):
         ax_w = axes[row, 0]
         ax_f = axes[row, 1]
         ax_i = axes[row, 2]
+        ax_m = axes[row, 3]
         ax_w.imshow(weights[:, :, 0, idx], cmap="gray")
         ax_w.set_title(f"Filter {idx} weights")
         ax_w.axis("off")
@@ -97,6 +100,10 @@ def main() -> None:
         ax_i.set_title("Importance")
         ax_i.axis("off")
         fig.colorbar(im, ax=ax_i)
+        im2 = ax_m.imshow(max_map[:, :, 0], cmap=CMAP, vmin=0.0, vmax=1.0)
+        ax_m.set_title("Max variance")
+        ax_m.axis("off")
+        fig.colorbar(im2, ax=ax_m)
 
     plt.tight_layout()
     plt.show()
