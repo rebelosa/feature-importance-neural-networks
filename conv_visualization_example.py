@@ -1,0 +1,105 @@
+"""Example of variance-based importance with a Conv2D model."""
+
+from __future__ import annotations
+
+import logging
+
+import matplotlib.pyplot as plt
+import numpy as np
+from tensorflow.keras.datasets import mnist
+from tensorflow.keras.layers import Conv2D, Dense, Flatten, MaxPooling2D
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.utils import to_categorical
+
+from neural_feature_importance.conv_callbacks import ConvVarianceImportanceKeras
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+def build_model() -> Sequential:
+    """Return a minimal Conv2D model with multiple filters."""
+    model = Sequential(
+        [
+            Conv2D(8, (3, 3), activation="relu", input_shape=(28, 28, 1)),
+            MaxPooling2D((2, 2)),
+            Flatten(),
+            Dense(10, activation="softmax"),
+        ]
+    )
+    model.compile(
+        optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"]
+    )
+    return model
+
+
+def _threshold_filters(weights: np.ndarray, threshold: float) -> np.ndarray:
+    """Return binarized filters using the given threshold."""
+    abs_w = np.abs(weights)
+    max_vals = abs_w.max(axis=(0, 1, 2), keepdims=True)
+    safe = np.where(max_vals == 0, 1.0, max_vals)
+    masks = (abs_w / safe) >= threshold
+    return masks.astype(float)
+
+
+def compute_filter_scores(
+    weights: np.ndarray, heatmap: np.ndarray, threshold: float
+) -> tuple[np.ndarray, np.ndarray]:
+    """Return per-filter scores and thresholded filters."""
+    masks = _threshold_filters(weights, threshold)
+    scores = np.sum(masks * heatmap[..., None], axis=(0, 1, 2))
+    return scores.astype(float), masks
+
+
+def main() -> None:
+    """Train model on MNIST and display a heatmap of importances."""
+    (x_train, y_train), _ = mnist.load_data()
+    x_train = x_train.astype("float32") / 255.0
+    x_train = x_train[..., None]
+    y_train = to_categorical(y_train, 10)
+
+    model = build_model()
+    callback = ConvVarianceImportanceKeras()
+    model.fit(
+        x_train,
+        y_train,
+        epochs=2,
+        batch_size=128,
+        callbacks=[callback],
+        verbose=0,
+    )
+
+    feat_scores = callback.feature_importances_
+    if feat_scores is None:
+        logger.warning("No importance scores computed.")
+        return
+
+    weights = model.layers[0].get_weights()[0]
+    n_filters = weights.shape[-1]
+    heatmap = feat_scores.reshape(weights.shape[:3])
+    threshold = 0.5
+    filter_scores, masks = compute_filter_scores(weights, heatmap, threshold)
+    order = np.argsort(filter_scores)[::-1]
+    logger.info("Filter scores: %s", filter_scores.tolist())
+
+    fig, axes = plt.subplots(n_filters, 3, figsize=(9, 3 * n_filters))
+    for row, idx in enumerate(order):
+        ax_w = axes[row, 0]
+        ax_f = axes[row, 1]
+        ax_i = axes[row, 2]
+        ax_w.imshow(weights[:, :, 0, idx], cmap="gray")
+        ax_w.set_title(f"Filter {idx} weights")
+        ax_w.axis("off")
+        ax_f.imshow(masks[:, :, 0, idx], cmap="gray_r")
+        ax_f.set_title("Thresholded")
+        ax_f.axis("off")
+        im = ax_i.imshow(heatmap[:, :, 0], cmap="gray_r")
+        ax_i.set_title("Importance")
+        ax_i.axis("off")
+        fig.colorbar(im, ax=ax_i)
+    plt.tight_layout()
+    plt.show()
+
+
+if __name__ == "__main__":
+    main()

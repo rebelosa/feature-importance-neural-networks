@@ -7,6 +7,7 @@ from .callbacks import (
     VarianceImportanceKeras,
     VarianceImportanceTorch,
 )
+from .conv_callbacks import ConvVarianceImportanceKeras, ConvVarianceImportanceTorch
 from .utils import MetricThreshold
 
 try:
@@ -19,4 +20,6 @@ __all__ = [
     "VarianceImportanceKeras",
     "VarianceImportanceTorch",
     "MetricThreshold",
+    "ConvVarianceImportanceKeras",
+    "ConvVarianceImportanceTorch",
 ]
