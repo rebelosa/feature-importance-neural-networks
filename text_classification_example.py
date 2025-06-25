@@ -61,6 +61,25 @@ def main() -> None:
     plt.title("Conv1D feature importance")
     plt.show()
 
+    max_var = callback.max_variance_
+    if max_var is None:
+        logger.warning("No variance values computed.")
+        return
+
+    var_map = max_var.reshape(weights.shape[0], weights.shape[1])
+    vmax = float(np.max(np.abs(weights)))
+    fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+    im_w = axes[0].imshow(
+        weights[:, :, 0], aspect="auto", cmap="seismic", vmin=-vmax, vmax=vmax
+    )
+    axes[0].set_title("Conv1D weights")
+    fig.colorbar(im_w, ax=axes[0])
+    im_v = axes[1].imshow(var_map, aspect="auto", cmap="gray", vmin=0.0, vmax=1.0)
+    axes[1].set_title("Max variance")
+    fig.colorbar(im_v, ax=axes[1])
+    plt.tight_layout()
+    plt.show()
+
 
 if __name__ == "__main__":
     main()
