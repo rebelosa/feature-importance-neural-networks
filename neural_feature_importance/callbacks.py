@@ -54,6 +54,10 @@ class VarianceImportanceBase:
             variance = self._m2 / (self._n - 1)
 
         self.max_variance = np.max(variance, axis=1)
+        max_min = float(np.min(self.max_variance))
+        max_max = float(np.max(self.max_variance))
+        max_denom = max_max - max_min if max_max != max_min else 1.0
+        self.max_variance = (self.max_variance - max_min) / max_denom
         scores = np.sum(variance * np.abs(self._last_weights), axis=1)
         min_val = float(np.min(scores))
         max_val = float(np.max(scores))

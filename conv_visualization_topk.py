@@ -23,6 +23,8 @@ logger = logging.getLogger(__name__)
 CMAP = mcolors.LinearSegmentedColormap.from_list(
     "white_blue_black", ["white", "blue", "black"]
 )
+# Diverging colormap for weight visualization
+WEIGHT_CMAP = plt.cm.seismic
 
 
 def _accuracy_with_filters(model, x, y, indices: Iterable[int]) -> float:
@@ -84,18 +86,25 @@ def main() -> None:
     filter_scores, thr_weights = compute_filter_scores(weights, heatmap, threshold)
     order = np.argsort(filter_scores)[::-1]
 
+    vmax = float(np.max(np.abs(weights)))
     fig, axes = plt.subplots(n_filters, 4, figsize=(12, 3 * n_filters))
     for row, idx in enumerate(order):
         ax_w = axes[row, 0]
         ax_f = axes[row, 1]
         ax_i = axes[row, 2]
         ax_m = axes[row, 3]
-        ax_w.imshow(weights[:, :, 0, idx], cmap="gray")
+        im_w = ax_w.imshow(
+            weights[:, :, 0, idx], cmap=WEIGHT_CMAP, vmin=-vmax, vmax=vmax
+        )
         ax_w.set_title(f"Filter {idx} weights")
         ax_w.axis("off")
-        ax_f.imshow(thr_weights[:, :, 0, idx], cmap="gray_r")
+        fig.colorbar(im_w, ax=ax_w)
+        im_f = ax_f.imshow(
+            thr_weights[:, :, 0, idx], cmap=WEIGHT_CMAP, vmin=-vmax, vmax=vmax
+        )
         ax_f.set_title("Thresholded")
         ax_f.axis("off")
+        fig.colorbar(im_f, ax=ax_f)
         im = ax_i.imshow(heatmap[:, :, 0], cmap=CMAP, vmin=0.0, vmax=1.0)
         ax_i.set_title("Importance")
         ax_i.axis("off")

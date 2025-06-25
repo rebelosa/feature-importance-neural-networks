@@ -32,7 +32,7 @@ def build_model() -> Sequential:
     """Return a small Conv1D model."""
     model = Sequential(
         [
-            Embedding(MAX_FEATURES, 32, input_length=MAX_LEN, trainable=False),
+            Embedding(MAX_FEATURES, 32, input_length=MAX_LEN, trainable=True),
             Conv1D(1, 5, activation="relu"),
             GlobalMaxPooling1D(),
             Dense(1, activation="sigmoid"),
