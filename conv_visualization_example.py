@@ -39,18 +39,14 @@ def build_model() -> Sequential:
 
 
 def _threshold_filters(weights: np.ndarray, threshold: float) -> np.ndarray:
-    """Return binarized filters using the given threshold."""
-    abs_w = np.abs(weights)
-    max_vals = abs_w.max(axis=(0, 1, 2), keepdims=True)
-    safe = np.where(max_vals == 0, 1.0, max_vals)
-    masks = (abs_w / safe) >= threshold
-    return masks.astype(float)
+    """Return a binary mask for each filter using an absolute threshold."""
+    return (np.abs(weights) >= threshold).astype(float)
 
 
 def compute_filter_scores(
     weights: np.ndarray, heatmap: np.ndarray, threshold: float
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Return per-filter scores and thresholded filters."""
+    """Return per-filter scores and binarized filters."""
     masks = _threshold_filters(weights, threshold)
     scores = np.sum(masks * heatmap[..., None], axis=(0, 1, 2))
     return scores.astype(float), masks
