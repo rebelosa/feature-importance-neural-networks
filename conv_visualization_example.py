@@ -39,17 +39,19 @@ def build_model() -> Sequential:
 
 
 def _threshold_filters(weights: np.ndarray, threshold: float) -> np.ndarray:
-    """Return a binary mask for each filter using an absolute threshold."""
-    return (np.abs(weights) >= threshold).astype(float)
+    """Return thresholded weights, keeping values above the absolute threshold."""
+    thr = np.abs(weights) >= threshold
+    masked = np.where(thr, weights, 0.0)
+    return masked
 
 
 def compute_filter_scores(
     weights: np.ndarray, heatmap: np.ndarray, threshold: float
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Return per-filter scores and binarized filters."""
-    masks = _threshold_filters(weights, threshold)
-    scores = np.sum(masks * heatmap[..., None], axis=(0, 1, 2))
-    return scores.astype(float), masks
+    """Return per-filter scores and thresholded weights."""
+    thr_weights = _threshold_filters(weights, threshold)
+    scores = np.sum(thr_weights * heatmap[..., None], axis=(0, 1, 2))
+    return scores.astype(float), thr_weights
 
 
 def main() -> None:
@@ -79,7 +81,7 @@ def main() -> None:
     n_filters = weights.shape[-1]
     heatmap = feat_scores.reshape(weights.shape[:3])
     threshold = 0.5
-    filter_scores, masks = compute_filter_scores(weights, heatmap, threshold)
+    filter_scores, thr_weights = compute_filter_scores(weights, heatmap, threshold)
     order = np.argsort(filter_scores)[::-1]
     logger.info("Filter scores: %s", filter_scores.tolist())
 
@@ -91,7 +93,7 @@ def main() -> None:
         ax_w.imshow(weights[:, :, 0, idx], cmap="gray")
         ax_w.set_title(f"Filter {idx} weights")
         ax_w.axis("off")
-        ax_f.imshow(masks[:, :, 0, idx], cmap="gray_r")
+        ax_f.imshow(thr_weights[:, :, 0, idx], cmap="gray_r")
         ax_f.set_title("Thresholded")
         ax_f.axis("off")
         im = ax_i.imshow(heatmap[:, :, 0], cmap=CMAP, vmin=0.0, vmax=1.0)
