@@ -47,8 +47,6 @@ def main() -> None:
     """Train the model and plot a heatmap of importances."""
     (x_train, y_train), _ = load_data()
     model = build_model()
-    # Ensure the model is built so the callback can access weights
-    model.build((None, MAX_LEN))
     callback = ConvVarianceImportanceKeras()
     model.fit(x_train, y_train, epochs=2, batch_size=128, callbacks=[callback], verbose=0)
 
