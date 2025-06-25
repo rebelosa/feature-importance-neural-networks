@@ -27,7 +27,9 @@ class ConvVarianceImportanceKeras(VarianceImportanceKeras):
     def on_train_begin(self, logs: Optional[dict] = None) -> None:
         self._layer = None
         for layer in self.model.layers:
-            if layer.get_weights():
+            has_vars = bool(layer.trainable_weights)
+            has_data = bool(layer.get_weights())
+            if has_vars and has_data:
                 self._layer = layer
                 break
         if self._layer is None:
