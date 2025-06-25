@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 import numpy as np
 from tensorflow.keras.datasets import mnist
 from tensorflow.keras.layers import Conv2D, Dense, Flatten, MaxPooling2D
@@ -17,12 +18,16 @@ from conv_visualization_example import compute_filter_scores
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+CMAP = mcolors.LinearSegmentedColormap.from_list(
+    "white_blue_black", ["white", "blue", "black"]
+)
+
 
 def build_model() -> PredictTopKModel:
     """Return a Conv2D model with the `predict_top_k` method."""
     model = PredictTopKModel(
         [
-            Conv2D(8, (3, 3), activation="relu", input_shape=(28, 28, 1)),
+            Conv2D(8, (8, 8), activation="relu", input_shape=(28, 28, 1)),
             MaxPooling2D((2, 2)),
             Flatten(),
             Dense(10, activation="softmax"),
@@ -41,7 +46,7 @@ def main() -> None:
 
     model = build_model()
     callback = ConvVarianceImportanceKeras()
-    model.fit(x_train, y_train, epochs=2, batch_size=128, callbacks=[callback], verbose=0)
+    model.fit(x_train, y_train, epochs=2, batch_size=32, callbacks=[callback], verbose=0)
 
     scores = callback.feature_importances_
     if scores is None:
@@ -66,7 +71,7 @@ def main() -> None:
         ax_f.imshow(masks[:, :, 0, idx], cmap="gray_r")
         ax_f.set_title("Thresholded")
         ax_f.axis("off")
-        im = ax_i.imshow(heatmap[:, :, 0], cmap="gray_r")
+        im = ax_i.imshow(heatmap[:, :, 0], cmap=CMAP, vmin=0.0, vmax=1.0)
         ax_i.set_title("Importance")
         ax_i.axis("off")
         fig.colorbar(im, ax=ax_i)

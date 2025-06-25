@@ -45,7 +45,7 @@ def main() -> None:
 
     model = build_model()
     callback = ConvVarianceImportanceKeras()
-    model.fit(x_train, y_train, epochs=2, batch_size=128, callbacks=[callback], verbose=0)
+    model.fit(x_train, y_train, epochs=2, batch_size=32, callbacks=[callback], verbose=0)
 
     scores = callback.feature_importances_
     if scores is None:
