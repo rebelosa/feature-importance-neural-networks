@@ -118,7 +118,8 @@ def main() -> None:
     logger.info("Filter scores: %s", filter_scores.tolist())
 
     vmax = float(np.max(np.abs(weights)))
-    conv_model = tf.keras.Model(model.input, model.layers[0].output)
+    # Use a standalone model with the first convolutional layer only
+    conv_model = Sequential([model.layers[0]])
     example_out = conv_model.predict(x_test[:1], verbose=0)[0]
 
     fig, axes = plt.subplots(n_filters, 3, figsize=(9, 3 * n_filters))
