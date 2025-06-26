@@ -40,6 +40,7 @@ def build_model() -> Sequential:
         ]
     )
     model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
+    model.build((None, MAX_LEN))
     return model
 
 
