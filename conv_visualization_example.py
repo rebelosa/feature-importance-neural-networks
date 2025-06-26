@@ -5,6 +5,8 @@ from __future__ import annotations
 import logging
 from typing import Iterable
 
+import tensorflow as tf
+
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import numpy as np
@@ -109,32 +111,37 @@ def main() -> None:
     n_filters = weights.shape[-1]
     heatmap = feat_scores.reshape(weights.shape[:3])
     threshold = 0.0
-    filter_scores, thr_weights = compute_filter_scores(weights, heatmap, threshold)
+    filter_scores, thr_weights = compute_filter_scores(
+        weights, heatmap, threshold
+    )
     order = np.argsort(filter_scores)[::-1]
     logger.info("Filter scores: %s", filter_scores.tolist())
 
     vmax = float(np.max(np.abs(weights)))
+    conv_model = tf.keras.Model(model.input, model.layers[0].output)
+    example_out = conv_model.predict(x_test[:1], verbose=0)[0]
+
     fig, axes = plt.subplots(n_filters, 3, figsize=(9, 3 * n_filters))
     for row, idx in enumerate(order):
         ax_w = axes[row, 0]
-        ax_f = axes[row, 1]
-        ax_i = axes[row, 2]
+        ax_i = axes[row, 1]
+        ax_o = axes[row, 2]
         im_w = ax_w.imshow(
             weights[:, :, 0, idx], cmap=WEIGHT_CMAP, vmin=-vmax, vmax=vmax
         )
         ax_w.set_title(f"Filter {idx} weights")
         ax_w.axis("off")
         fig.colorbar(im_w, ax=ax_w)
-        im_f = ax_f.imshow(
-            thr_weights[:, :, 0, idx], cmap=WEIGHT_CMAP, vmin=-vmax, vmax=vmax
-        )
-        ax_f.set_title("Thresholded")
-        ax_f.axis("off")
-        fig.colorbar(im_f, ax=ax_f)
         im = ax_i.imshow(heatmap[:, :, 0], cmap=CMAP, vmin=0.0, vmax=1.0)
         ax_i.set_title("Importance")
         ax_i.axis("off")
         fig.colorbar(im, ax=ax_i)
+        im_o = ax_o.imshow(
+            example_out[:, :, idx], cmap="gray", vmin=0.0, vmax=np.max(example_out)
+        )
+        ax_o.set_title("Filter output")
+        ax_o.axis("off")
+        fig.colorbar(im_o, ax=ax_o)
     plt.tight_layout()
     plt.show()
 
