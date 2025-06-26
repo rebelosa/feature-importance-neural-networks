@@ -21,7 +21,6 @@ class VarianceImportanceBase:
         self._m2: np.ndarray | None = None
         self._last_weights: np.ndarray | None = None
         self.var_scores: np.ndarray | None = None
-        self.max_variance: np.ndarray | None = None
 
     def start(self, weights: np.ndarray) -> None:
         """Initialize statistics for the given weight matrix."""
@@ -53,11 +52,6 @@ class VarianceImportanceBase:
         else:
             variance = self._m2 / (self._n - 1)
 
-        self.max_variance = np.max(variance, axis=1)
-        max_min = float(np.min(self.max_variance))
-        max_max = float(np.max(self.max_variance))
-        max_denom = max_max - max_min if max_max != max_min else 1.0
-        self.max_variance = (self.max_variance - max_min) / max_denom
         scores = np.sum(variance * np.abs(self._last_weights), axis=1)
         min_val = float(np.min(scores))
         max_val = float(np.max(scores))
@@ -72,10 +66,6 @@ class VarianceImportanceBase:
         """Normalized importance scores for each input feature."""
         return self.var_scores
 
-    @property
-    def max_variance_(self) -> np.ndarray | None:
-        """Maximum variance observed for each input feature."""
-        return self.max_variance
 
 
 class VarianceImportanceKeras(Callback, VarianceImportanceBase):
