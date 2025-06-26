@@ -1,4 +1,4 @@
-"""Variance importance visualization on the digits dataset."""
+"""Helper utilities for convolutional importance visualizations."""
 
 from __future__ import annotations
 
@@ -8,27 +8,20 @@ from typing import Iterable
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import numpy as np
-from sklearn.datasets import load_digits
-from sklearn.model_selection import train_test_split
 from tensorflow.keras.layers import Conv2D, Dense, Flatten, MaxPooling2D
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.utils import to_categorical
 
-from neural_feature_importance.conv_callbacks import ConvVarianceImportanceKeras
-from conv_visualization_example import compute_filter_scores
-
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 CMAP = mcolors.LinearSegmentedColormap.from_list("white_blue_black", ["white", "blue", "black"])
 WEIGHT_CMAP = plt.cm.seismic
 
 
-def build_model() -> Sequential:
-    """Return a simple Conv2D model for the digits dataset."""
+def build_model(input_shape: tuple[int, int, int], kernel_size: tuple[int, int]) -> Sequential:
+    """Return a simple Conv2D model for visualization experiments."""
     model = Sequential(
         [
-            Conv2D(8, (3, 3), activation="relu", input_shape=(8, 8, 1)),
+            Conv2D(8, kernel_size, activation="relu", input_shape=input_shape),
             MaxPooling2D((2, 2)),
             Flatten(),
             Dense(10, activation="softmax"),
@@ -38,7 +31,35 @@ def build_model() -> Sequential:
     return model
 
 
-def _accuracy_with_filters(model: Sequential, x: np.ndarray, y: np.ndarray, indices: Iterable[int]) -> float:
+def _threshold_filters(weights: np.ndarray, threshold: float) -> np.ndarray:
+    """Return weights where values below the threshold are set to zero."""
+    mask = np.abs(weights) >= threshold
+    return np.where(mask, weights, 0.0)
+
+
+def compute_filter_scores(
+    weights: np.ndarray, heatmap: np.ndarray, threshold: float
+) -> tuple[np.ndarray, np.ndarray]:
+    """Return per-filter scores and thresholded weights."""
+    thr_weights = _threshold_filters(weights, threshold)
+    scores = np.sum(np.abs(thr_weights) * heatmap[..., None], axis=(0, 1, 2))
+    return scores.astype(float), thr_weights
+
+
+def rank_filters(weights: np.ndarray, heatmap: np.ndarray, threshold: float) -> np.ndarray:
+    """Return filter indices sorted by descending importance."""
+    scores, _ = compute_filter_scores(weights, heatmap, threshold)
+    order = np.argsort(scores)[::-1]
+    logger.info("Filter scores: %s", scores.tolist())
+    return order
+
+
+def accuracy_with_filters(
+    model: Sequential,
+    x: np.ndarray,
+    y: np.ndarray,
+    indices: Iterable[int],
+) -> float:
     """Return accuracy when only selected filters are active."""
     conv = model.layers[0]
     original = conv.get_weights()
@@ -55,32 +76,14 @@ def _accuracy_with_filters(model: Sequential, x: np.ndarray, y: np.ndarray, indi
     return acc
 
 
-def main() -> None:
-    """Train a Conv2D model on the digits dataset and plot importances."""
-    digits = load_digits()
-    x = digits.images[..., None] / 16.0
-    y = to_categorical(digits.target, 10)
-    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
-
-    model = build_model()
-    callback = ConvVarianceImportanceKeras()
-    model.fit(x_train, y_train, epochs=5, batch_size=32, callbacks=[callback], verbose=1)
-
-    scores = callback.feature_importances_
-    if scores is None:
-        logger.warning("No importance scores computed.")
-        return
-
-    weights = model.layers[0].get_weights()[0]
+def plot_filters(
+    weights: np.ndarray,
+    heatmap: np.ndarray,
+    example_out: np.ndarray,
+    order: Iterable[int],
+) -> None:
+    """Display filter weights, importances, and outputs."""
     n_filters = weights.shape[-1]
-    heatmap = scores.reshape(weights.shape[:3])
-    filter_scores, _ = compute_filter_scores(weights, heatmap, threshold=0.0)
-    order = np.argsort(filter_scores)[::-1]
-    logger.info("Filter scores: %s", filter_scores.tolist())
-
-    conv_model = Sequential([model.layers[0]])
-    example_out = conv_model.predict(x_test[:1], verbose=0)[0]
-
     vmax = float(np.max(np.abs(weights)))
     fig, axes = plt.subplots(n_filters, 3, figsize=(9, 3 * n_filters))
     for row, idx in enumerate(order):
@@ -101,13 +104,3 @@ def main() -> None:
         fig.colorbar(im_o, ax=ax_o)
     plt.tight_layout()
     plt.show()
-
-    results = {}
-    for k in (2, 4, 6):
-        acc = _accuracy_with_filters(model, x_test, y_test, order[:k])
-        results[k] = acc
-    logger.info("Accuracy with top filters: %s", results)
-
-
-if __name__ == "__main__":
-    main()

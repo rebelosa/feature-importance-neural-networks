@@ -80,15 +80,12 @@ python full_experiment.py
 
 To compute importances for convolutional networks, use
 `ConvVarianceImportanceKeras` from `neural_feature_importance.conv_callbacks`.
-`conv_visualization_example.py` trains a small Conv2D model on MNIST and displays
-per-filter heatmaps:
+`conv_visualization_example.py` trains small Conv2D models on the MNIST and
+scikit‑learn digits datasets and displays per-filter heatmaps:
 
 ```bash
 python conv_visualization_example.py
 ```
-
-For a lightweight demonstration on the scikit-learn digits dataset, run
-`digits_visualization_example.py`.
 
 ## Development
 
