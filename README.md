@@ -92,7 +92,7 @@ python conv_visualization_example.py
 To compute token importances from embedding weights, use
 `EmbeddingVarianceImportanceKeras` from `neural_feature_importance.embedding_callbacks`.
 The script `text_token_importance_example.py` trains a small text classifier on
-IMDB and plots a bar chart of per-token scores:
+IMDB for two epochs and plots a bar chart of per-token scores:
 
 ```bash
 python text_token_importance_example.py

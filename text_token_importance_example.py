@@ -50,7 +50,8 @@ def main() -> None:
     x_train = pad_sequences(x_train, maxlen=MAX_LEN)
     model = build_model()
     callback = EmbeddingVarianceImportanceKeras()
-    model.fit(x_train, y_train, epochs=1, batch_size=128, callbacks=[callback], verbose=0)
+    # At least two epochs are required so variance scores are meaningful
+    model.fit(x_train, y_train, epochs=2, batch_size=128, callbacks=[callback], verbose=0)
 
     scores = callback.feature_importances_
     if scores is None:
