@@ -7,7 +7,12 @@ from collections import Counter
 from typing import Iterable, List
 
 import numpy as np
-from tensorflow.keras.layers import Conv1D, Dense, Embedding, GlobalMaxPooling1D
+from tensorflow.keras.layers import (
+    Conv1D,
+    Dense,
+    Embedding,
+    GlobalMaxPooling1D,
+)
 from tensorflow.keras.models import Sequential
 
 logging.basicConfig(level=logging.INFO)
@@ -27,7 +32,11 @@ def build_model() -> Sequential:
             Dense(1, activation="sigmoid"),
         ]
     )
-    model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
+    model.compile(
+        optimizer="adam",
+        loss="binary_crossentropy",
+        metrics=["accuracy"],
+    )
     model.build((None, MAX_LEN))
     return model
 
@@ -44,10 +53,16 @@ def summarize_top_tokens(
     index_word: dict[int, str],
     k: int,
 ) -> str:
-    """Return a table with the top ``k`` unique tokens and their counts."""
+    """Return a table with the top ``k`` unique tokens and their counts.
+
+    Special tokens such as ``<PAD>`` and ``<UNK>`` are ignored.
+    """
+    ignore = {"<PAD>", "<START>", "<UNK>", "<UNUSED>"}
     totals: dict[int, float] = {}
     counts: Counter[int] = Counter()
     for t in tokens:
+        if index_word.get(t) in ignore:
+            continue
         if t < len(scores):
             totals[t] = totals.get(t, 0.0) + float(scores[t])
         counts[t] += 1
@@ -56,6 +71,8 @@ def summarize_top_tokens(
     rows: List[tuple[str, int, str]] = []
     for token_id, score in ordered:
         token = index_word.get(token_id, "?")
+        if token in ignore:
+            continue
         rows.append((token, counts[token_id], f"{score:.3f}"))
     table_lines = [" | ".join(headers)]
     table_lines.append("-|-".join("-" * len(h) for h in headers))
