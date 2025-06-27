@@ -12,7 +12,9 @@ from tensorflow.keras.layers import Conv1D, Dense, Embedding, GlobalMaxPooling1D
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
-from neural_feature_importance.conv_callbacks import ConvVarianceImportanceKeras
+from neural_feature_importance.embedding_callbacks import (
+    EmbeddingVarianceImportanceKeras,
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -47,7 +49,7 @@ def main() -> None:
     (x_train, y_train), _ = imdb.load_data(num_words=MAX_FEATURES)
     x_train = pad_sequences(x_train, maxlen=MAX_LEN)
     model = build_model()
-    callback = ConvVarianceImportanceKeras()
+    callback = EmbeddingVarianceImportanceKeras()
     model.fit(x_train, y_train, epochs=1, batch_size=128, callbacks=[callback], verbose=0)
 
     scores = callback.feature_importances_
@@ -80,3 +82,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

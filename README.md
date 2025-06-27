@@ -87,6 +87,17 @@ scikit‑learn digits datasets and displays per-filter heatmaps:
 python conv_visualization_example.py
 ```
 
+### Embedding layers
+
+To compute token importances from embedding weights, use
+`EmbeddingVarianceImportanceKeras` from `neural_feature_importance.embedding_callbacks`.
+The script `text_token_importance_example.py` trains a small text classifier on
+IMDB and plots a bar chart of per-token scores:
+
+```bash
+python text_token_importance_example.py
+```
+
 ## Development
 
 After making changes, run the following checks:
