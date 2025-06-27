@@ -1,4 +1,10 @@
-"""Variance-based feature importance utilities."""
+"""Utilities for computing variance-based feature importances.
+
+These classes track the weights of the first trainable layer during training
+and estimate feature importances by accumulating the variance of each weight
+value. After training, the variances are combined with the last observed
+weights to produce a normalized importance score for every input feature.
+"""
 
 from __future__ import annotations
 
@@ -13,7 +19,13 @@ logger = logging.getLogger(__name__)
 
 
 class VarianceImportanceBase:
-    """Compute feature importance using Welford's algorithm."""
+    """Compute feature importances using running variance statistics.
+
+    The class implements Welford's algorithm to accumulate the variance of
+    weight values over training iterations. Feature importances are derived by
+    combining the final variance estimates with the absolute value of the last
+    observed weights.
+    """
 
     def __init__(self) -> None:
         self._n = 0
@@ -23,13 +35,21 @@ class VarianceImportanceBase:
         self.var_scores: np.ndarray | None = None
 
     def start(self, weights: np.ndarray) -> None:
-        """Initialize statistics for the given weight matrix."""
+        """Initialize running statistics.
+
+        Parameters
+        ----------
+        weights:
+            Initial weight matrix of shape ``(features, outputs)``. The values
+            are converted to ``float64`` for numerical stability and the running
+            mean and variance buffers are reset.
+        """
         self._mean = weights.astype(np.float64)
         self._m2 = np.zeros_like(self._mean)
         self._n = 0
 
     def update(self, weights: np.ndarray) -> None:
-        """Update running statistics with new weights."""
+        """Update running mean and variance using new weights."""
         if self._mean is None or self._m2 is None:
             return
         self._n += 1
@@ -40,7 +60,7 @@ class VarianceImportanceBase:
         self._last_weights = weights
 
     def finalize(self) -> None:
-        """Finalize statistics and compute normalized scores."""
+        """Compute normalized importance scores from accumulated statistics."""
         if self._last_weights is None or self._m2 is None:
             logger.warning(
                 "%s was not fully initialized; no scores computed", self.__class__.__name__
@@ -65,6 +85,7 @@ class VarianceImportanceBase:
     def feature_importances_(self) -> np.ndarray | None:
         """Normalized importance scores for each input feature."""
         return self.var_scores
+
 
 
 class VarianceImportanceKeras(Callback, VarianceImportanceBase):

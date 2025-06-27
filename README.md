@@ -1,7 +1,6 @@
 # neural-feature-importance
 
 [![PyPI version](https://img.shields.io/pypi/v/neural-feature-importance.svg)](https://pypi.org/project/neural-feature-importance/)
-[![Python versions](https://img.shields.io/pypi/pyversions/neural-feature-importance.svg)](https://pypi.org/project/neural-feature-importance/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
@@ -63,17 +62,42 @@ print(tracker.feature_importances_)
 
 ## Example scripts
 
-Run `compare_feature_importance.py` to train a small network on the Iris dataset
+Run `scripts/compare_feature_importance.py` to train a small network on the Iris dataset
 and compare the scores with a random forest baseline:
 
 ```bash
 python compare_feature_importance.py
 ```
 
-Run `full_experiment.py` to reproduce the experiments from the paper:
+Run `scripts/full_experiment.py` to reproduce the experiments from the paper:
 
 ```bash
 python full_experiment.py
+```
+
+### Convolutional models
+
+To compute importances for convolutional networks, use
+`ConvVarianceImportanceKeras` from `neural_feature_importance.conv_callbacks`.
+`scripts/conv_visualization_example.py` trains small Conv2D models on the MNIST
+and scikit‑learn digits datasets and displays per-filter heatmaps. An equivalent
+notebook is available in ``notebooks/conv_visualization_example.ipynb``:
+
+```bash
+python scripts/conv_visualization_example.py
+```
+
+### Embedding layers
+
+To compute token importances from embedding weights, use
+`EmbeddingVarianceImportanceKeras` or `EmbeddingVarianceImportanceTorch` from
+`neural_feature_importance.embedding_callbacks`.
+Run `scripts/token_importance_topk_example.py` to train a small text classifier
+on IMDB and display the most important tokens. A matching notebook lives in
+``notebooks/token_importance_topk_example.ipynb``:
+
+```bash
+python scripts/token_importance_topk_example.py
 ```
 
 ## Development
