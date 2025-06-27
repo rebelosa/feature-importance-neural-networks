@@ -44,7 +44,6 @@ class ConvVarianceImportanceKeras(VarianceImportanceKeras):
     channel is treated as a separate feature. Variances are accumulated during
     training and converted to per-filter importance scores.
     """
-
     def on_train_begin(self, logs: Optional[dict] = None) -> None:
         self._layer = None
         for layer in self.model.layers:
@@ -79,7 +78,6 @@ class ConvVarianceImportanceTorch(VarianceImportanceTorch):
     built with :mod:`torch.nn`. The first trainable parameter with two or more
     dimensions is flattened so each spatial position becomes a tracked feature.
     """
-
     def on_train_begin(self) -> None:
         from torch import nn
 
