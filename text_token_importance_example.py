@@ -70,15 +70,22 @@ def main() -> None:
     token_scores = [scores[t] if t < len(scores) else 0.0 for t in sample]
     words = [index_word.get(t, "?") for t in sample]
 
+    text = decode_review(sample.tolist(), index_word)
+    logger.info("Sample text: %s", text)
+
+    top_idx = np.argsort(token_scores)[-5:][::-1]
+    top_tokens = [words[i] for i in top_idx]
+    logger.info("Top 5 tokens: %s", top_tokens)
+
+    colors = ["crimson" if i in top_idx else "steelblue" for i in range(len(words))]
+
     fig, ax = plt.subplots(figsize=(12, 2))
-    ax.bar(range(len(words)), token_scores, color="steelblue")
+    ax.bar(range(len(words)), token_scores, color=colors)
     ax.set_xlabel("Token position")
     ax.set_ylabel("Importance")
     ax.set_title("Token importances for sample 0")
     plt.tight_layout()
     plt.show()
-
-    logger.info("Sample text: %s", decode_review(sample.tolist(), index_word))
 
 
 if __name__ == "__main__":
