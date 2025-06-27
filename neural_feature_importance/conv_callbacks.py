@@ -1,4 +1,4 @@
-"""Callbacks with convolutional layer support."""
+"""Callbacks that extend variance tracking to convolutional layers."""
 
 from __future__ import annotations
 
@@ -13,7 +13,22 @@ logger = logging.getLogger(__name__)
 
 
 def _flatten_weights(weights: np.ndarray, outputs_last: bool) -> np.ndarray:
-    """Return a 2-D array with shape (features, outputs)."""
+    """Return a two-dimensional view of convolutional kernels.
+
+    Parameters
+    ----------
+    weights:
+        Weight tensor from a convolutional layer. Expected shape is
+        ``(H, W, in_channels, out_channels)`` when ``outputs_last`` is ``True``
+        and ``(out_channels, in_channels, H, W)`` otherwise.
+    outputs_last:
+        Whether the output dimension is the last axis of ``weights``.
+
+    Returns
+    -------
+    np.ndarray
+        Array of shape ``(features, outputs)`` suitable for variance tracking.
+    """
     if weights.ndim > 2:
         if outputs_last:
             return weights.reshape(-1, weights.shape[-1])
@@ -22,7 +37,13 @@ def _flatten_weights(weights: np.ndarray, outputs_last: bool) -> np.ndarray:
 
 
 class ConvVarianceImportanceKeras(VarianceImportanceKeras):
-    """Keras callback supporting convolutional layers."""
+    """Keras callback that tracks convolutional kernels.
+
+    The first trainable layer is inspected and, if its weights have more than
+    two dimensions, they are flattened so that each spatial location and input
+    channel is treated as a separate feature. Variances are accumulated during
+    training and converted to per-filter importance scores.
+    """
 
     def on_train_begin(self, logs: Optional[dict] = None) -> None:
         self._layer = None
@@ -52,7 +73,12 @@ class ConvVarianceImportanceKeras(VarianceImportanceKeras):
 
 
 class ConvVarianceImportanceTorch(VarianceImportanceTorch):
-    """PyTorch helper supporting convolutional layers."""
+    """PyTorch helper with convolutional support.
+
+    Works analogously to :class:`ConvVarianceImportanceKeras` but for models
+    built with :mod:`torch.nn`. The first trainable parameter with two or more
+    dimensions is flattened so each spatial position becomes a tracked feature.
+    """
 
     def on_train_begin(self) -> None:
         from torch import nn

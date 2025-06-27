@@ -1,4 +1,9 @@
-"""Utilities for analyzing top-k token importances."""
+"""Utilities for analyzing top-k token importances.
+
+These helpers build a small text classification model and provide functions to
+decode token sequences and print tables of the most important tokens according
+to variance-based scores.
+"""
 
 from __future__ import annotations
 
@@ -23,7 +28,12 @@ MAX_LEN = 400
 
 
 def build_model() -> Sequential:
-    """Return a small text classification model."""
+    """Return a small text classification model.
+
+    The model consists of an embedding layer followed by a single convolution
+    and a global max pooling operation. It is intentionally tiny so it can be
+    trained quickly on the IMDB dataset for demonstration purposes.
+    """
     model = Sequential(
         [
             Embedding(MAX_FEATURES, 32, input_length=MAX_LEN, trainable=True),
@@ -55,7 +65,16 @@ def summarize_top_tokens(
 ) -> str:
     """Return a table with the top ``k`` unique tokens and their counts.
 
-    Special tokens such as ``<PAD>`` and ``<UNK>`` are ignored.
+    Parameters
+    ----------
+    tokens:
+        Token ids representing a review.
+    scores:
+        Array of token importance scores obtained from the embedding callback.
+    index_word:
+        Mapping from token id to the corresponding word.
+    k:
+        Number of tokens to include in the table.
     """
     ignore = {"<PAD>", "<START>", "<UNK>", "<UNUSED>"}
     totals: dict[int, float] = {}
@@ -89,7 +108,11 @@ def analyze_samples(
     num_samples: int = 5,
     k: int = 5,
 ) -> None:
-    """Log original text and top tokens for a few samples."""
+    """Log original text and the most important tokens for several samples.
+
+    Each selected sample is decoded to text, its label is printed, and a table
+    of the top ``k`` tokens by importance score is logged.
+    """
     for i in range(min(num_samples, len(x))):
         tokens = x[i].tolist()
         label = "positive" if y[i] == 1 else "negative"

@@ -1,4 +1,9 @@
-"""Helper utilities for convolutional importance visualizations."""
+"""Helper utilities for convolutional importance visualizations.
+
+These functions build small convolutional models, compute filter scores using
+variance-based importances, and plot the resulting weight maps and activations.
+They are intended for exploratory analysis and example scripts.
+"""
 
 from __future__ import annotations
 
@@ -18,7 +23,15 @@ WEIGHT_CMAP = plt.cm.seismic
 
 
 def build_model(input_shape: tuple[int, int, int], kernel_size: tuple[int, int]) -> Sequential:
-    """Return a simple Conv2D model for visualization experiments."""
+    """Return a simple Conv2D model for visualization experiments.
+
+    Parameters
+    ----------
+    input_shape:
+        Shape of the input images, e.g. ``(28, 28, 1)``.
+    kernel_size:
+        Size of the convolution kernel.
+    """
     model = Sequential(
         [
             Conv2D(8, kernel_size, activation="relu", input_shape=input_shape),
@@ -32,7 +45,7 @@ def build_model(input_shape: tuple[int, int, int], kernel_size: tuple[int, int])
 
 
 def _threshold_filters(weights: np.ndarray, threshold: float) -> np.ndarray:
-    """Return weights where values below the threshold are set to zero."""
+    """Binarize filter weights using a threshold."""
     mask = np.abs(weights) >= threshold
     return np.where(mask, weights, 0.0)
 
@@ -40,7 +53,11 @@ def _threshold_filters(weights: np.ndarray, threshold: float) -> np.ndarray:
 def compute_filter_scores(
     weights: np.ndarray, heatmap: np.ndarray, threshold: float
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Return per-filter scores and thresholded weights."""
+    """Compute filter importance scores.
+
+    Filters are thresholded and multiplied by the variance heatmap before
+    summing over all spatial dimensions.
+    """
     thr_weights = _threshold_filters(weights, threshold)
     scores = np.sum(np.abs(thr_weights) * heatmap[..., None], axis=(0, 1, 2))
     return scores.astype(float), thr_weights

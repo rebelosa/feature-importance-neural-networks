@@ -8,7 +8,10 @@ from .callbacks import (
     VarianceImportanceTorch,
 )
 from .conv_callbacks import ConvVarianceImportanceKeras, ConvVarianceImportanceTorch
-from .embedding_callbacks import EmbeddingVarianceImportanceKeras
+from .embedding_callbacks import (
+    EmbeddingVarianceImportanceKeras,
+    EmbeddingVarianceImportanceTorch,
+)
 from .utils import MetricThreshold
 
 try:
@@ -24,4 +27,5 @@ __all__ = [
     "ConvVarianceImportanceKeras",
     "ConvVarianceImportanceTorch",
     "EmbeddingVarianceImportanceKeras",
+    "EmbeddingVarianceImportanceTorch",
 ]
