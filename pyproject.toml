@@ -15,3 +15,6 @@ requires-python = ">=3.10"
 tensorflow = ["tensorflow"]
 torch = ["torch"]
 [tool.setuptools_scm]
+
+[tool.setuptools]
+packages = ["neural_feature_importance"]
